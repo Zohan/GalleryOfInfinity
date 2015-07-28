@@ -15,8 +15,8 @@ int clockPin = 13;      // 'green' wire
 // Set the first variable to the NUMBER of pixels. 20 = 20 pixels in a row
 LPD6803 strip = LPD6803(NUM_LEDS, dataPin, clockPin);
 
-#define echoPin A1 // Echo Pin = Analog Pin 0
-#define trigPin A0 // Trigger Pin = Analog Pin 1
+#define echoPin 6 // Echo Pin = Analog Pin 0
+#define trigPin 7 // Trigger Pin = Analog Pin 1
 #define ZERO_COUNT_LIMIT 2
 
 volatile long duration; // Duration used to calculate distance
@@ -29,7 +29,7 @@ const int maximumRange=120; //Maximum Sonar Range. Maximum Range is 200, but we 
 
 void setup() { 
   //Setup the trigger and Echo pins of the HC-SR04 sensor
-  //Serial.begin(9600);
+  Serial.begin(9600);
   //Serial.println("Starting Cylon");
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
@@ -109,6 +109,7 @@ void getDistance(){
      //digitalWrite(LEDPin, HIGH); 
    } else {
      HR_dist = newDist;
+     Serial.println(HR_dist);
      /* Send the distance to the computer using Serial protocol, and
      turn LED OFF to indicate successful reading. */
      //digitalWrite(LEDPin, LOW);
@@ -162,7 +163,6 @@ ISR(TIMER2_COMPA_vect)
 {
    timer2Count++;
    if(timer2Count >= 20) {
-     //Serial.println("Boop");
      timer2Count = 0;
      getDistance();
      if(HR_dist > 240) HR_dist = 240;

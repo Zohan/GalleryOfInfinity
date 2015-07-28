@@ -9,10 +9,10 @@
 // functionality of the pins is lost (as they use Timer2 to do PWM), the pins are still available to use.
 // NOTE: For Teensy/Leonardo (ATmega32U4) the library uses Timer4 instead of Timer2.
 // ---------------------------------------------------------------------------
-#include <NewPing.h>
+#include "NewPing.h"
 
-#define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on ping sensor.
-#define ECHO_PIN     11  // Arduino pin tied to echo pin on ping sensor.
+#define TRIGGER_PIN  A0  // Arduino pin tied to trigger pin on ping sensor.
+#define ECHO_PIN     A1  // Arduino pin tied to echo pin on ping sensor.
 #define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.

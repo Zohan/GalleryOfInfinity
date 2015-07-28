@@ -1,4 +1,4 @@
-#include <TimerOne.h>
+#include "TimerOne.h"
 #include "LPD6803.h"
 
 //Example to control LPD6803-based RGB LED Modules in a strand
@@ -11,14 +11,14 @@
 
 // Choose which 2 pins you will use for output.
 // Can be any valid output pins.
-int dataPin = 2;       // 'yellow' wire
-int clockPin = 3;      // 'green' wire
+int dataPin = 3;       // 'yellow' wire
+int clockPin = 13;      // 'green' wire
 // Don't forget to connect 'blue' to ground and 'red' to +5V
 
 // Timer 1 is also used by the strip to send pixel clocks
 
 // Set the first variable to the NUMBER of pixels. 20 = 20 pixels in a row
-LPD6803 strip = LPD6803(20, dataPin, clockPin);
+LPD6803 strip = LPD6803(50, dataPin, clockPin);
 
 
 void setup() {

@@ -23,11 +23,16 @@ LPD6803 strip = LPD6803(50, dataPin, clockPin);
 
 #define TRIGGER_PIN  A0  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     A1  // Arduino pin tied to echo pin on the ultrasonic sensor.
-#define MAX_DISTANCE 150 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+#define MAX_DISTANCE 120 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+#define ZERO_COUNT_LIMIT 5
+unsigned int pingSpeed = 100; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
+unsigned long pingTimer;     // Holds the next ping time.
+volatile byte zeroCount=0; //Keeps track of the number of '0's seen. Too many 0s = value of 200.
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
 volatile unsigned int uS;
+volatile unsigned int distance = 120;
 
 void setup() {
   //initTimer2();
@@ -67,7 +72,8 @@ void rainbow(uint8_t wait) {
   for (j=0; j < 96 * 3; j++) {     // 3 cycles of all 96 colors in the wheel
     for (i=0; i < strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel( (i + j) % 96));
-    }  
+    }
+    
     strip.show();   // write all the pixels out
     uS = sonar.ping(); // Send ping, get ping time in microseconds (uS).
     delay(25+uS / US_ROUNDTRIP_CM);
@@ -86,15 +92,15 @@ void rainbowCycle(uint8_t wait) {
       // Then add in j which makes the colors go around per pixel
       // the % 96 is to make the wheel cycle around
       int preBrightVal = Wheel( ((i * 96 / strip.numPixels()) + j) % 96);
-      byte distance = ((uS/US_ROUNDTRIP_CM)/4);
-      int brightnessChange = 31-distance;
-      if(distance > 120) brightnessChange = 0;
+      byte distanceResult = distance/4;
+      int brightnessChange = 31-distanceResult;
+      if(distance > MAX_DISTANCE) brightnessChange = 0;
       int color = setBrightness(preBrightVal,brightnessChange);
       
       strip.setPixelColor(i, color);
     }  
     strip.show();   // write all the pixels out
-    uS = sonar.ping(); // Send ping, get ping time in microseconds (uS).
+    getDistance();
     delay(25+uS / US_ROUNDTRIP_CM);
   }
 }
@@ -165,6 +171,24 @@ unsigned int Wheel(byte WheelPos)
   }
   return(Color(r,g,b));
 }
+
+void getDistance() {
+  if(millis() >= pingTimer) {
+    uS = sonar.ping();
+    long newDist = uS/US_ROUNDTRIP_CM;
+    if (newDist >= MAX_DISTANCE || newDist <= 0){
+      if(++zeroCount >= ZERO_COUNT_LIMIT) {
+        zeroCount = 0;
+        if(distance < MAX_DISTANCE) distance+=8;
+        Serial.println(distance);
+      }
+    } else {
+        distance = newDist;
+        Serial.println(distance);
+    }
+  }
+}
+
 
     
     
