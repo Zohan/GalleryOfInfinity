@@ -101,7 +101,7 @@ void rainbowCycle(uint8_t wait) {
     }  
     strip.show();   // write all the pixels out
     getDistance();
-    delay(25+uS / US_ROUNDTRIP_CM);
+    delay(25+distance);
   }
 }
 
