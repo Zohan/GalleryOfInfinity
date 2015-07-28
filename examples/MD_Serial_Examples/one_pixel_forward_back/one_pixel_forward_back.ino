@@ -16,7 +16,7 @@
  */
 
 
-#include <FastSPI_LED.h>
+#include "FastSPI_LED.h"
 
 // There are 30 LEDs per meter on the MD strips but 3 LEDs are wired in series, so there are
 // 10 LEDs (pixels really) per meter. Set "#define NUM_LEDS 50" to however many meters you have
@@ -35,7 +35,7 @@ struct CRGB {
 
 struct CRGB *leds; //pointer to the beginning of the struct
 
-#define PIN 4    // change to your data pin
+#define PIN 11    // change to your data pin
 
 // This is an array of rgb pixels to display. Feel free to add, delete, 
 // or change this anyway you wish but be sure to add or delete values in r,g,b triplets.
@@ -50,7 +50,7 @@ int maxPixArray = sizeof(pixelArr) / 3;   // lets sketches know where to wrap ar
 void setup()
 {
     FastSPI_LED.setLeds(NUM_LEDS);
-    FastSPI_LED.setChipset(CFastSPI_LED::SPI_UCS1903);
+    FastSPI_LED.setChipset(CFastSPI_LED::SPI_LPD6803);
     FastSPI_LED.setPin(PIN);
     FastSPI_LED.init();
     FastSPI_LED.start();

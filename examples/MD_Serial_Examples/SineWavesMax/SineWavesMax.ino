@@ -11,7 +11,7 @@
  to the stip.
  */
 
-#include <FastSPI_LED.h>
+#include "FastSPI_LED.h"
 
 // There are 30 LEDs per meter on the MD strips but 3 LEDs are wired in series, so there are
 // 10 LEDs (pixels really) per meter. Set "#define NUM_LEDS 50" to however many meters you have
@@ -55,12 +55,13 @@ void setup()
 {
     Serial.begin(9600);
     FastSPI_LED.setLeds(NUM_LEDS);
-    FastSPI_LED.setChipset(CFastSPI_LED::SPI_UCS1903);
+    FastSPI_LED.setChipset(CFastSPI_LED::SPI_LPD6803);
     FastSPI_LED.setPin(PIN);
     FastSPI_LED.init();
     FastSPI_LED.start();
     leds = (struct CRGB*)FastSPI_LED.getRGBData(); 
     Serial.println("Start"); 
+    delay(1000);
 }
 
 void loop() { 
@@ -68,9 +69,9 @@ void loop() {
     // increment variables - experiment with values!
     // these values control the speed of color change
     // very small numbers could be useful (eg .002) coiuld be useful in creating really subtly changing color schemes
-    sinValX  += .03;
-    sinValY  += .045;
-    sinValZ  += .025;
+    sinValX  += .06;
+    sinValY  += .09;
+    sinValZ  += .05;
 
     memset(leds, 0, NUM_LEDS * 3);         // turns off all LEDs
     // push data out to LEDs one pixel at a time
@@ -97,7 +98,7 @@ void loop() {
 
     }
     FastSPI_LED.show();
-    delay(20);
+    delay(DELAY_SPEED);
 }
 
 
