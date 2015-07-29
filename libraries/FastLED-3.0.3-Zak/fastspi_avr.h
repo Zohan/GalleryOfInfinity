@@ -291,14 +291,6 @@ public:
 				writeBytePostWait(data);
 				writeBytePostWait(data>>8);
 			} else {
-				Serial.print("RGB is");
-				Serial.println(g);
-				//delay(100);
-				//writeByte(D::adjust(pixels.loadAndScale0()));
-				//writeByte(D::adjust(pixels.loadAndScale1()));
-				//writeByte(D::adjust(pixels.loadAndScale2()));
-				//writeByte(data>>8);
-				//writeByte(data);
 				writeWord(data);
 			}
 
