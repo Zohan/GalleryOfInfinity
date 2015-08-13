@@ -18,7 +18,7 @@
 // times 10. Or count the number of chips on your section of strip.
 
 #define NUM_LEDS 50
-#define DELAY_SPEED 30     // larger numbers are slower - in mS, change to suit
+#define DELAY_SPEED 20     // larger numbers are slower - in mS, change to suit
 const unsigned int COLOR_MAX = NUM_LEDS * 3;      // controls color change speed, change multiplier
 
 // x_COLOR_DEPTH sets the variation in one color, smaller values = less variation, values
@@ -35,7 +35,7 @@ const  int  G_OFFSET = 100;
 const  int  B_OFFSET = 64;
 
 
-#define PIN 4    // change to your data pin 
+#define PIN 3    // change to your data pin 
 
 float sinValX, sinValY, sinValZ, X, Y, Z;    // floats for sine waves
 
@@ -43,9 +43,9 @@ float sinValX, sinValY, sinValZ, X, Y, Z;    // floats for sine waves
 // Some chipsets must be backwards
 
 struct CRGB { 
+    unsigned char g; 
     unsigned char r; 
     unsigned char b; 
-    unsigned char g; 
 };
 
 // struct CRGB { unsigned char r; unsigned char g; unsigned char b; };
@@ -69,9 +69,9 @@ void loop() {
     // increment variables - experiment with values!
     // these values control the speed of color change
     // very small numbers could be useful (eg .002) coiuld be useful in creating really subtly changing color schemes
-    sinValX  += .06;
-    sinValY  += .09;
-    sinValZ  += .05;
+    sinValX  += .002;
+    sinValY  += .004;
+    sinValZ  += .0015;
 
     memset(leds, 0, NUM_LEDS * 3);         // turns off all LEDs
     // push data out to LEDs one pixel at a time

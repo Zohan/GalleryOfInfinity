@@ -18,32 +18,33 @@
 // times 10. Or count the number of chips on your section of strip.
 
 #define NUM_LEDS 50
-#define DELAY_SPEED 30     // larger numbers are slower - in mS, change to suit
+uint8_t DELAY_SPEED = 30;
+const uint8_t LED_MIDPOINT = NUM_LEDS/2;
 const unsigned int COLOR_MAX = NUM_LEDS * 3;      // controls color change speed, change multiplier
 
 // x_COLOR_DEPTH sets the variation in one color, smaller values = less variation, values
 // greater than 128 will clip (go to 0 or 256 for longer than "normal"). Experiment!
-const  int R_COLOR_DEPTH=20;       // valid values btwn 1 and 128   1 = pastel white, 128 is brightly colored 
+const  int R_COLOR_DEPTH=0;       // valid values btwn 1 and 128   1 = pastel white, 128 is brightly colored 
 const  int G_COLOR_DEPTH=20;
 const  int B_COLOR_DEPTH=20;
 
 // in most circumstances you probably want OFFSET to be about the same value as COLOR_DEPTH, 
 // but changing the offset a bit can help add or subtract a particular primary from the changing mix.
 // Experiment!
-const  int R_OFFSET = 20;
+const  int R_OFFSET = 0;
 const  int  G_OFFSET = 20;
 const  int  B_OFFSET = 20;
 
-#define PIN 4    // change to your data pin 
+#define PIN 3    // change to your data pin 
 
 float sinValX, sinValY, sinValZ, X, Y, Z;    // floats for sine waves
 
 // This is correct for the Modern Device RGB LED strips
 // Somet chipsets wire must be backwards.
 struct CRGB { 
+    unsigned char g; 
     unsigned char r; 
     unsigned char b; 
-    unsigned char g; 
 };
 // struct CRGB { unsigned char r; unsigned char g; unsigned char b; };
 
@@ -68,30 +69,31 @@ void loop() {
     sinValX  += .17;
     sinValY  += .2;
     sinValZ  += .3;
-
     memset(leds, 0, NUM_LEDS * 3);         // turns off all LEDs
-    // push data out to LEDs one pixel at a time
-    for(int i = 0 ; i < NUM_LEDS; i++ ) {
-
-        // sin() will return a float between -1 and 1
-        // The we just have to scale the output to appropriate levels.
-        // and add an offset to get rid of the negative numbers.
-
-        X =  (sin(sinValX + (i * .3)) * R_COLOR_DEPTH) + R_OFFSET;
-        X = constrain(X, 0, 255);
-        Y= (sin(sinValY + (i * .2)) * G_COLOR_DEPTH) + G_OFFSET; 
-        Y = constrain(Y, 0, 255);
-        Z =  (sin(sinValZ + (i * .1)) * B_COLOR_DEPTH) + B_OFFSET; 
-        Z = constrain(Z, 0, 255);
-
-        leds[i].r = X;
-        leds[i].g = Y;
-        leds[i].b = Z;
-    }
+    stripSine();
     FastSPI_LED.show();
     delay(10);     // frame rate delay - OK to change
 }
 
+void stripSine() {
+  // push data out to LEDs one pixel at a time
+  for(int i = 0 ; i < NUM_LEDS; i++ ) {
+      // sin() will return a float between -1 and 1
+      // The we just have to scale the output to appropriate levels.
+      // and add an offset to get rid of the negative numbers.
+
+      X =  (sin(sinValX + (i * .3)) * R_COLOR_DEPTH) + R_OFFSET;
+      X = constrain(X, 0, 255);
+      Y= (sin(sinValY + (i * .2)) * G_COLOR_DEPTH) + G_OFFSET; 
+      Y = constrain(Y, 0, 255);
+      Z =  (sin(sinValZ + (i * .1)) * B_COLOR_DEPTH) + B_OFFSET; 
+      Z = constrain(Z, 0, 255);
+
+      leds[i].r = X;
+      leds[i].g = Y;
+      leds[i].b = Z;
+  }
+}
 
 
 

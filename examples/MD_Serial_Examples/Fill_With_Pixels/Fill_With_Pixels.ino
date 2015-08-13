@@ -21,15 +21,15 @@
 #define DELAY_SPEED 30          // larger numbers are slower - in mS, change to suit
 const unsigned long COLOR_MAX = NUM_LEDS * 3;      // controls color change speed, change multiplier
 
-#define PIN 4    // change to your data pin 
+#define PIN 11    // change to your data pin 
 
 #define SMOOTH_COLOR 1           // blend between colors
 
 // Somet chipsets wire in a backwards sort of way
 struct CRGB { 
+    unsigned char g; 
     unsigned char r; 
     unsigned char b; 
-    unsigned char g; 
 };
 // struct CRGB { unsigned char r; unsigned char g; unsigned char b; };
 

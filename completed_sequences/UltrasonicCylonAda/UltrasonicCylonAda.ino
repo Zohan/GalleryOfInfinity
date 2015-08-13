@@ -15,8 +15,8 @@ int clockPin = 13;      // 'green' wire
 // Set the first variable to the NUMBER of pixels. 20 = 20 pixels in a row
 LPD6803 strip = LPD6803(NUM_LEDS, dataPin, clockPin);
 
-#define echoPin 6 // Echo Pin = Analog Pin 0
-#define trigPin 7 // Trigger Pin = Analog Pin 1
+#define echoPin A1 // Echo Pin = Analog Pin 1
+#define trigPin A0 // Trigger Pin = Analog Pin 0
 #define ZERO_COUNT_LIMIT 2
 
 volatile long duration; // Duration used to calculate distance
