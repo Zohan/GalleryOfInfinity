@@ -6,7 +6,7 @@
 
 // Choose which 2 pins you will use for output.
 // Can be any valid output pins.
-int dataPin = 3;       // 'yellow' wire
+int dataPin = 11;       // 'yellow' wire
 int clockPin = 13;      // 'green' wire
 // Don't forget to connect 'blue' to ground and 'red' to +5V
 
