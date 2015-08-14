@@ -174,9 +174,6 @@ void moveShots() {
   for(i=0; i<MAXSTEPS; i++) {     // For each step...
     if(shotMag[i] <= 0) continue; // Skip if inactive
     for(j=0; j<NUM_LEDS; j++) { // For each LED...
-      // Each step has sort of a 'wave' that's part of the animation,
-      // moving from heel to toe.  The wave position has sub-pixel
-      // resolution (4X), and is up to 80 units (20 pixels) long.
       mx1 = (j << 2) - shotStepX[i]; // Position of LED along wave
       if((mx1 <= 0) || (mx1 >= 10)) continue; // Out of range
       if(mx1 > 8) { // Rising edge of wave; ramp up fast (4 px)
@@ -228,6 +225,14 @@ void moveShots() {
 }
 
 bool intersectionCheck() {
+  for(int i=1; i<MAXSTEPS; i++) {
+    if(shotStepX[i-1] == shotStepX[i] && 
+        shotMag[i-1] > 0 &&
+        shotMag[i] > 0) {
+      addExplosion(shotStepX[i]);
+      Serial.println(shotStepX[i]/6);
+    }
+  }
   return false;
 }
 
