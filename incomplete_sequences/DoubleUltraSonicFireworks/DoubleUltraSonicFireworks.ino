@@ -64,11 +64,11 @@ unsigned int ledRefreshRate = 2; // How frequently are we going to send out a re
 #define TRIGGER_PIN2  A2  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN2     A3  // Arduino pin tied to echo pin on the ultrasonic sensor.
 #define MAX_DISTANCE 50 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
-#define ZERO_COUNT_LIMIT 10
+#define ZERO_COUNT_LIMIT 30
 unsigned int pingSpeed = 100; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
 unsigned long pingTimer;     // Holds the next ping time.
-volatile byte zeroCount=0; //Keeps track of the number of '0's seen. Too many 0s = value of 200.
-uint8_t shotFired, shotPrepared, shot2Fired, shot2Prepared;
+volatile int zeroCount=0; //Keeps track of the number of '0's seen. Too many 0s = value of 200.
+uint8_t shotFired, shotPrepared, shot2Fired, shot2Prepared, shotNum;
 uint8_t shotDistance = 0;
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
@@ -174,7 +174,8 @@ void loop() {
 }
 
 void getDistance(NewPing theSonar, uint8_t sonarNum) {
-  if(millis() >= pingTimer) {
+  if(millis() - pingTimer >= pingSpeed) {
+    pingTimer = millis();
     uS = theSonar.ping();
     long newDist = uS/US_ROUNDTRIP_CM;
     if (newDist >= MAX_DISTANCE || newDist <= 0){
@@ -193,6 +194,7 @@ void getDistance(NewPing theSonar, uint8_t sonarNum) {
     } else {
         distance = newDist;
         //if(distance > 
+        if(--zeroCount < 0) zeroCount = 0;
         shotPrepared = true;
         Serial.print("Shots Prepared: ");
         Serial.println(distance);

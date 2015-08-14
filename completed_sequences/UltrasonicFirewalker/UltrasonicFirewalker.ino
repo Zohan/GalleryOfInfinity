@@ -62,8 +62,8 @@ unsigned int ledRefreshRate = 2; // How frequently are we going to send out a re
 #define TRIGGER_PIN  A0  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     A1  // Arduino pin tied to echo pin on the ultrasonic sensor.
 #define MAX_DISTANCE 50 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
-#define ZERO_COUNT_LIMIT 10
-unsigned int pingSpeed = 100; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
+#define ZERO_COUNT_LIMIT 5
+unsigned int pingSpeed = 75; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
 unsigned long pingTimer;     // Holds the next ping time.
 volatile byte zeroCount=0; //Keeps track of the number of '0's seen. Too many 0s = value of 200.
 uint8_t shotFired, shotPrepared, shotNum;
@@ -100,76 +100,78 @@ void loop() {
   
   getDistance();
   //if(shotFired) {
-    int mx1, px1, px2, m;
-    memset(mag, 0, sizeof(mag));    // Clear magnitude buffer
-    for(i=0; i<MAXSTEPS; i++) {     // For each step...
-      if(stepMag[i] <= 0) continue; // Skip if inactive
-      for(j=0; j<NUM_LEDS; j++) { // For each LED...
-        // Each step has sort of a 'wave' that's part of the animation,
-        // moving from heel to toe.  The wave position has sub-pixel
-        // resolution (4X), and is up to 80 units (20 pixels) long.
-        mx1 = (j << 2) - stepX[i]; // Position of LED along wave
-        if((mx1 <= 0) || (mx1 >= 80)) continue; // Out of range
-        if(mx1 > 64) { // Rising edge of wave; ramp up fast (4 px)
-          m = ((long)stepMag[i] * (long)(80 - mx1)) >> 4;
-        } else { // Falling edge of wave; fade slow (16 px)
-          m = ((long)stepMag[i] * (long)mx1) >> 6;
-        }
-        mag[j] += m; // Add magnitude to buffered sum
+  int mx1, px1, px2, m;
+  memset(mag, 0, sizeof(mag));    // Clear magnitude buffer
+  for(i=0; i<MAXSTEPS; i++) {     // For each step...
+    if(stepMag[i] <= 0) continue; // Skip if inactive
+    for(j=0; j<NUM_LEDS; j++) { // For each LED...
+      // Each step has sort of a 'wave' that's part of the animation,
+      // moving from heel to toe.  The wave position has sub-pixel
+      // resolution (4X), and is up to 80 units (20 pixels) long.
+      mx1 = (j << 2) - stepX[i]; // Position of LED along wave
+      if((mx1 <= 0) || (mx1 >= 80)) continue; // Out of range
+      if(mx1 > 64) { // Rising edge of wave; ramp up fast (4 px)
+        m = ((long)stepMag[i] * (long)(80 - mx1)) >> 4;
+      } else { // Falling edge of wave; fade slow (16 px)
+        m = ((long)stepMag[i] * (long)mx1) >> 6;
       }
-      stepX[i]++; // Update position of step wave
-      if(stepX[i] >= (80 + (NUM_LEDS_HALF << 2)))
-        stepMag[i] = 0; // Off end; disable step wave
-      else
-        stepMag[i] = ((long)stepMag[i] * 127L) >> 7; // Fade
+      mag[j] += m; // Add magnitude to buffered sum
     }
-    // For a little visual interest, some 'sparkle' is added.
-    // The cumulative step magnitude is added to one pixel at random.
-    /*long sum = 0;
-    for(i=0; i<MAXSTEPS; i++) sum += stepMag[i];
-    if(sum > 0) {
-      i = random(NUM_LEDS_HALF);
-      mag[i] += sum / 4;
-    }*/
-   
-    // Now the grayscale magnitude buffer is remapped to color for the LEDs.
-    // The code below uses a blackbody palette, which fades from white to yellow
-    // to red to black.  The goal here was specifically a "walking on fire"
-    // aesthetic, so the usual ostentatious rainbow of hues seen in most LED
-    // projects is purposefully skipped in favor of a more plain effect.
-    uint8_t r, g, b;
-    int     level;
-    for(i=0; i<=NUM_LEDS_HALF; i++) { // For each LED on one side...
-      level = mag[i];                // Pixel magnitude (brightness)
-      if(level < 255) {              // 0-254 = black to red-1
-        r = pgm_read_byte(&gamma[level]);
-        g = b = 0;
-      } else if(level < 510) {       // 255-509 = red to yellow-1
-        r = 255;
-        g = pgm_read_byte(&gamma[level - 255]);
-        b = 0;
-      } else if(level < 765) {       // 510-764 = yellow to white-1
-        r = g = 255;
-        b = pgm_read_byte(&gamma[level - 510]);
-      } else {                       // 765+ = white
-        r = g = b = 255;
-      }
-      // Set R/G/B color along outside of shoe
-      leds[NUM_LEDS-i].r = r;
-      leds[NUM_LEDS-i].g = g;
-      leds[NUM_LEDS-i].b = b;
-      // Pixels along inside are funny...
-      leds[i].r = r;
-      leds[i].g = g;
-      leds[i].b = b;
+    stepX[i]++; // Update position of step wave
+    if(stepX[i] >= (80 + (NUM_LEDS_HALF << 2)))
+      stepMag[i] = 0; // Off end; disable step wave
+    else
+      stepMag[i] = ((long)stepMag[i] * 127L) >> 7; // Fade
+  }
+  // For a little visual interest, some 'sparkle' is added.
+  // The cumulative step magnitude is added to one pixel at random.
+  /*long sum = 0;
+  for(i=0; i<MAXSTEPS; i++) sum += stepMag[i];
+  if(sum > 0) {
+    i = random(NUM_LEDS_HALF);
+    mag[i] += sum / 4;
+  }*/
+ 
+  // Now the grayscale magnitude buffer is remapped to color for the LEDs.
+  // The code below uses a blackbody palette, which fades from white to yellow
+  // to red to black.  The goal here was specifically a "walking on fire"
+  // aesthetic, so the usual ostentatious rainbow of hues seen in most LED
+  // projects is purposefully skipped in favor of a more plain effect.
+  uint8_t r, g, b;
+  int     level;
+  for(i=0; i<=NUM_LEDS_HALF; i++) { // For each LED on one side...
+    level = mag[i];                // Pixel magnitude (brightness)
+    //Serial.println(level);
+    if(level < 255) {              // 0-254 = black to red-1
+      r = pgm_read_byte(&gamma[level]);
+      g = b = 0;
+    } else if(level < 510) {       // 255-509 = red to yellow-1
+      r = 255;
+      g = pgm_read_byte(&gamma[level - 255]);
+      b = 0;
+    } else if(level < 765) {       // 510-764 = yellow to white-1
+      r = g = 255;
+      b = pgm_read_byte(&gamma[level - 510]);
+    } else {                       // 765+ = white
+      r = g = b = 255;
     }
-  //}
+    // Set R/G/B color along outside of shoe
+    leds[NUM_LEDS-i].r = r;
+    leds[NUM_LEDS-i].g = g;
+    leds[NUM_LEDS-i].b = b;
+    // Pixels along inside are funny...
+    leds[i].r = r;
+    leds[i].g = g;
+    leds[i].b = b;
+  }
   FastSPI_LED.show();               // turn them back on
+  delayMicroseconds(3000);
   //shotFired = false;
 }
 
 void getDistance() {
-  if(millis() >= pingTimer) {
+  if(millis() - pingTimer >= pingSpeed) {
+    pingTimer = millis();
     uS = sonar.ping();
     long newDist = uS/US_ROUNDTRIP_CM;
     if (newDist >= MAX_DISTANCE || newDist <= 0){
@@ -177,10 +179,11 @@ void getDistance() {
         zeroCount = 0;
         if(shotPrepared) {
           Serial.println("Shot Fired");
+          if(distance < 5) distance = 5;
           shotFired = true;
           shotPrepared = false;
           shotDistance = distance;
-          stepMag[shotNum] = (255 - shotDistance) * 5; // Step intensity
+          stepMag[shotNum] = (50-shotDistance)*22; // Step intensity
           stepX[shotNum]   = -80; // Position starts behind heel, moves forward
           if(++shotNum >= MAXSTEPS) shotNum = 0; // If many, overwrite oldest
         }
@@ -188,15 +191,17 @@ void getDistance() {
     } else {
         distance = newDist;
         //if(distance > 
+        if(--zeroCount <= 0) zeroCount = 0;
         shotPrepared = true;
         Serial.print("Shots Prepared: ");
+        if(distance < 5) distance = 5;
         Serial.println(distance);
-        leds[0].r = 255-distance*5;
-        leds[0].g = 255-distance*5;
-        leds[0].b = 255-distance*5;
-        leds[NUM_LEDS-1].r = 255-distance*5;
-        leds[NUM_LEDS-1].g = 255-distance*5;
-        leds[NUM_LEDS-1].b = 255-distance*5;
+        leds[0].r = (50-distance)*5.5;
+        leds[0].g = (50-distance)*5.5;
+        leds[0].b = (50-distance)*5.5;
+        leds[NUM_LEDS-1].r = (50-distance)*5.5;
+        leds[NUM_LEDS-1].g = (50-distance)*5.5;
+        leds[NUM_LEDS-1].b = (50-distance)*5.5;
         FastSPI_LED.show();               // turn them back on
     }
   }

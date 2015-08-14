@@ -112,7 +112,8 @@ void stripSine() {
 }
 
 void getDistance() {
-  if(millis() >= pingTimer) {
+  if(millis() - pingTimer >= pingSpeed) {
+    pingTimer = millis();
     uS = sonar.ping();
     long newDist = uS/US_ROUNDTRIP_CM;
     if (newDist >= MAX_DISTANCE || newDist <= 0){
