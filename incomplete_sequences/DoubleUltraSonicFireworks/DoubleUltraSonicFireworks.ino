@@ -6,6 +6,7 @@
 
 #include "FastSPI_LED.h"
 #include "NewPing.h"
+#include <math.h>
 
 // There are 30 LEDs per meter on the MD strips but 3 LEDs are wired in series, so there are
 // 10 LEDs (pixels really) per meter. Set "#define NUM_LEDS 50" to however many meters you have
@@ -145,7 +146,7 @@ void loop() {
     leds[NUM_LEDS-1].b = 0;
   }
   FastSPI_LED.show();               // turn them back on
-  delayMicroseconds(30000);
+  delayMicroseconds(3000);
   
 }
 
@@ -153,11 +154,11 @@ void addShot(uint8_t side) {
   shotMag[shotNum] = (255 - shotDistance) * 5; // Step intensity
   switch(side) {
     case 0:
-      shotStepX[shotNum] = -80; // Position starts behind heel, moves forward
+      shotStepX[shotNum] = -40; // Position starts behind heel, moves forward
       break;
 
     case 1:
-      shotStepX[shotNum] = 180; // Position starts behind heel, moves forward
+      shotStepX[shotNum] = 200; // Position starts behind heel, moves forward
       //shotStepX[shotNum] = -80; // Position starts behind heel, moves forward
       break;
     
@@ -177,8 +178,8 @@ void moveShots() {
       // moving from heel to toe.  The wave position has sub-pixel
       // resolution (4X), and is up to 80 units (20 pixels) long.
       mx1 = (j << 2) - shotStepX[i]; // Position of LED along wave
-      if((mx1 <= 0) || (mx1 >= 40)) continue; // Out of range
-      if(mx1 > 32) { // Rising edge of wave; ramp up fast (4 px)
+      if((mx1 <= 0) || (mx1 >= 10)) continue; // Out of range
+      if(mx1 > 8) { // Rising edge of wave; ramp up fast (4 px)
         m = ((long)shotMag[i] * (long)(40 - mx1)) >> 3;
       } else { // Falling edge of wave; fade slow (16 px)
         m = ((long)shotMag[i] * (long)mx1) >> 4;
@@ -187,13 +188,12 @@ void moveShots() {
     }
     if(shotDirection[i] == 1) {
       shotStepX[i]--;
-      Serial.println(shotStepX[i]);
     } else {
       shotStepX[i]++;
     }
-    if(shotStepX[i] >= (80 + (NUM_LEDS_HALF << 2))) {
+    //Serial.println(abs(shotStepX[i]));
+    if(shotStepX[i] >= (120 + (NUM_LEDS_HALF << 2)) || shotStepX[i] <= -60) {
       shotMag[i] = 0; // Off end; disable step wave
-      Serial.println("Disabled");
     } else
       shotMag[i] = ((long)shotMag[i] * 127L) >> 7; // Fade
   }
