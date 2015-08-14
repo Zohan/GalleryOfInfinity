@@ -116,7 +116,12 @@ void loop() {
       }*/
     }
   }
-  shotFired = false;
+  if(shotFired) {
+    shotFired = false;
+  }
+  if(shot2Fired) {
+    shot2Fired = false;
+  }
 }
 
 void getDistance(NewPing theSonar, uint8_t sonarNum) {
@@ -140,23 +145,21 @@ void getDistance(NewPing theSonar, uint8_t sonarNum) {
         }
       }
     } else {
-        distance = newDist;
-        //if(distance > 
-        switch(sonarNum) {
-          case 0:
-            shotPrepared = true;
-            Serial.print("Shot Prepared: ");
-            Serial.println(distance);
-            break;
+      distance = newDist;
+      //if(distance > 
+      switch(sonarNum) {
+        case 0:
+          shotPrepared = true;
+          Serial.print("Shot Prepared: ");
+          Serial.println(distance);
+          break;
 
-          case 1:
-            Serial.print("Shot 2 Prepared: ");
-            Serial.println(distance);
-            shot2Prepared = true;
-            break;
-
-        }
-        
+        case 1:
+          Serial.print("Shot 2 Prepared: ");
+          Serial.println(distance);
+          shot2Prepared = true;
+          break;
+      }
     }
   }
 }
