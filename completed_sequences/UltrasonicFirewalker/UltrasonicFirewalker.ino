@@ -63,7 +63,7 @@ unsigned int ledRefreshRate = 2; // How frequently are we going to send out a re
 #define ECHO_PIN     A1  // Arduino pin tied to echo pin on the ultrasonic sensor.
 #define MAX_DISTANCE 50 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
 #define ZERO_COUNT_LIMIT 5
-unsigned int pingSpeed = 75; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
+unsigned int pingSpeed = 50; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
 unsigned long pingTimer;     // Holds the next ping time.
 volatile byte zeroCount=0; //Keeps track of the number of '0's seen. Too many 0s = value of 200.
 uint8_t shotFired, shotPrepared, shotNum;
@@ -163,8 +163,16 @@ void loop() {
     leds[i].r = r;
     leds[i].g = g;
     leds[i].b = b;
+    if(shotPrepared) {
+      leds[0].r = (50-distance)*5.5;
+      leds[0].g = (50-distance)*5.5;
+      leds[0].b = (50-distance)*5.5;
+      leds[NUM_LEDS-1].r = (50-distance)*5.5;
+      leds[NUM_LEDS-1].g = (50-distance)*5.5;
+      leds[NUM_LEDS-1].b = (50-distance)*5.5;
+    }
+    FastSPI_LED.show();               // turn them back on
   }
-  FastSPI_LED.show();               // turn them back on
   delayMicroseconds(3000);
   //shotFired = false;
 }
@@ -196,12 +204,6 @@ void getDistance() {
         Serial.print("Shots Prepared: ");
         if(distance < 5) distance = 5;
         Serial.println(distance);
-        leds[0].r = (50-distance)*5.5;
-        leds[0].g = (50-distance)*5.5;
-        leds[0].b = (50-distance)*5.5;
-        leds[NUM_LEDS-1].r = (50-distance)*5.5;
-        leds[NUM_LEDS-1].g = (50-distance)*5.5;
-        leds[NUM_LEDS-1].b = (50-distance)*5.5;
         FastSPI_LED.show();               // turn them back on
     }
   }
