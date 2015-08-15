@@ -82,6 +82,7 @@ volatile unsigned int distance = 50;
 #define MAXSTEPS       30 // Process (up to) this many concurrent steps
 int
   explosionMag[MAXSTEPS],  // Magnitude of steps
+  explosionLocation[MAXSTEPS],  // Magnitude of steps
   explosionStepX[MAXSTEPS],    // Position of 'step wave' along strip
   mag[NUM_LEDS]; // Brightness buffer (one side of shoe)
 
@@ -103,7 +104,7 @@ void setup()
   Serial.println("Beginning");
   memset(shotDirection, 0, sizeof(shotDirection));    // Clear magnitude buffer
     leds = (struct CRGB*)FastSPI_LED.getRGBData();   // set leds pointing at the buffer
-    addExplosion(8);
+    //addExplosion(8);
     shotNum = 0;
     explosionNum = 0;
 }
@@ -145,7 +146,7 @@ void loop() {
     leds[NUM_LEDS-1].b = 0;
   }
   FastSPI_LED.show();               // turn them back on
-  delayMicroseconds(3000);
+  delayMicroseconds(2000);
   
 }
 
@@ -228,6 +229,8 @@ bool intersectionCheck() {
         shotMag[i-1] > 0 &&
         shotMag[i] > 0) {
       addExplosion(8);
+      shotMag[i-1] = 0;
+      shotMag[i] = 0;
       Serial.println("Explosion");
     }
   }
@@ -236,7 +239,8 @@ bool intersectionCheck() {
 
 void addExplosion(uint8_t LED) {
   explosionMag[explosionNum] = 1000; // Step intensity
-  explosionStepX[explosionNum] = -20; // Position starts behind heel, moves forward
+  explosionStepX[explosionNum] = LED*6;
+  explosionLocation[explosionNum] = LED;
   if(++explosionNum >= MAXSTEPS) explosionNum = 0; // If many, overwrite oldest
 }
 
@@ -281,7 +285,7 @@ void explode() {
   // projects is purposefully skipped in favor of a more plain effect.
   uint8_t r, g, b;
   int     level;
-  for(i=0; i<=NUM_LEDS; i++) { // For each LED on one side...
+  for(i=0; i<=NUM_LEDS_HALF; i++) { // For each LED on one side...
     level = mag[i];                // Pixel magnitude (brightness)
     //Serial.println(level);
     if(level < 255) {              // 0-254 = black to red-1
@@ -298,13 +302,13 @@ void explode() {
       r = g = b = 255;
     }
     // Set R/G/B color along outside of shoe
-    leds[NUM_LEDS-i].r = r;
-    leds[NUM_LEDS-i].g = g;
-    leds[NUM_LEDS-i].b = b;
+    leds[NUM_LEDS_HALF-i].r = r;
+    leds[NUM_LEDS_HALF-i].g = g;
+    leds[NUM_LEDS_HALF-i].b = b;
     // Pixels along inside are funny...
-    leds[i].r = r;
-    leds[i].g = g;
-    leds[i].b = b;
+    leds[NUM_LEDS_HALF+i].r = r;
+    leds[NUM_LEDS_HALF+i].g = g;
+    leds[NUM_LEDS_HALF+i].b = b;
   }
 }
 
