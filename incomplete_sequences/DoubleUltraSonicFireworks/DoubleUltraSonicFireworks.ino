@@ -70,7 +70,7 @@ unsigned int pingSpeed = 50; // How frequently are we going to send out a ping (
 unsigned long pingTimer;     // Holds the next ping time.
 unsigned long pingTimer2;     // Holds the next ping time.
 volatile int zeroCount=0; //Keeps track of the number of '0's seen. Too many 0s = value of 200.
-uint8_t shotFired, shotPrepared, shot2Fired, shot2Prepared, shotNum;
+uint8_t shotFired, shotPrepared, shot2Fired, shot2Prepared, shotNum, explosionNum;
 uint8_t shotDistance = 0;
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
@@ -81,12 +81,9 @@ volatile unsigned int distance = 50;
 
 #define MAXSTEPS       30 // Process (up to) this many concurrent steps
 int
-  stepMag[MAXSTEPS],  // Magnitude of steps
-  stepX[MAXSTEPS],    // Position of 'step wave' along strip
-  mag[NUM_LEDS], // Brightness buffer (one side of shoe)
-  stepFiltered,       // Current filtered pressure reading
-  stepCount,          // Number of 'frames' current step has lasted
-  stepMin;            // Minimum reading during current step
+  explosionMag[MAXSTEPS],  // Magnitude of steps
+  explosionStepX[MAXSTEPS],    // Position of 'step wave' along strip
+  mag[NUM_LEDS]; // Brightness buffer (one side of shoe)
 
 #define MAXSHOTS  30;
 
@@ -106,14 +103,14 @@ void setup()
   Serial.println("Beginning");
   memset(shotDirection, 0, sizeof(shotDirection));    // Clear magnitude buffer
     leds = (struct CRGB*)FastSPI_LED.getRGBData();   // set leds pointing at the buffer
+    addExplosion(8);
+    shotNum = 0;
+    explosionNum = 0;
 }
 
 void loop() {   
   getDistance(sonar, 0);
   getDistance(sonar2, 1);
-  //if(shotFired) {
-  
-  //}
   if(shotFired) {
     shotFired = false;
     addShot(0);
@@ -122,11 +119,13 @@ void loop() {
     addShot(1);
     shot2Fired = false;
   }
-  if(intersectionCheck()) {
-    addExplosion(8);
-  }
+
+  memset(mag, 0, sizeof(mag));    // Clear magnitude buffer
+  explode();
   moveShots();
-  //explode();
+  intersectionCheck();
+  
+  
   if(shotPrepared) {
     leds[0].r = 255-distance*5;
     leds[0].g = 255-distance*5;
@@ -170,7 +169,6 @@ void addShot(uint8_t side) {
 void moveShots() {
   uint8_t i, j;
   int mx1, px1, px2, m;
-  memset(mag, 0, sizeof(mag));    // Clear magnitude buffer
   for(i=0; i<MAXSTEPS; i++) {     // For each step...
     if(shotMag[i] <= 0) continue; // Skip if inactive
     for(j=0; j<NUM_LEDS; j++) { // For each LED...
@@ -229,50 +227,52 @@ bool intersectionCheck() {
     if(shotStepX[i-1] == shotStepX[i] && 
         shotMag[i-1] > 0 &&
         shotMag[i] > 0) {
-      addExplosion(shotStepX[i]);
-      Serial.println(shotStepX[i]/6);
+      addExplosion(8);
+      Serial.println("Explosion");
     }
   }
   return false;
 }
 
 void addExplosion(uint8_t LED) {
-    
+  explosionMag[explosionNum] = 1000; // Step intensity
+  explosionStepX[explosionNum] = -20; // Position starts behind heel, moves forward
+  if(++explosionNum >= MAXSTEPS) explosionNum = 0; // If many, overwrite oldest
 }
 
 void explode() {
   uint8_t i, j;
   int mx1, px1, px2, m;
-  memset(mag, 0, sizeof(mag));    // Clear magnitude buffer
+ // memset(mag, 0, sizeof(mag));    // Clear magnitude buffer
   for(i=0; i<MAXSTEPS; i++) {     // For each step...
-    if(shotMag[i] <= 0) continue; // Skip if inactive
+    if(explosionMag[i] <= 0) continue; // Skip if inactive
     for(j=0; j<NUM_LEDS; j++) { // For each LED...
       // Each step has sort of a 'wave' that's part of the animation,
       // moving from heel to toe.  The wave position has sub-pixel
       // resolution (4X), and is up to 80 units (20 pixels) long.
-      mx1 = (j << 2) - shotStepX[i]; // Position of LED along wave
+      mx1 = (j << 2) - explosionStepX[i]; // Position of LED along wave
       if((mx1 <= 0) || (mx1 >= 80)) continue; // Out of range
       if(mx1 > 64) { // Rising edge of wave; ramp up fast (4 px)
-        m = ((long)shotMag[i] * (long)(80 - mx1)) >> 4;
+        m = ((long)explosionMag[i] * (long)(80 - mx1)) >> 4;
       } else { // Falling edge of wave; fade slow (16 px)
-        m = ((long)shotMag[i] * (long)mx1) >> 6;
+        m = ((long)explosionMag[i] * (long)mx1) >> 6;
       }
       mag[j] += m; // Add magnitude to buffered sum
     }
-    shotStepX[i]++; // Update position of step wave
-    if(shotStepX[i] >= (80 + (NUM_LEDS_HALF << 2)))
-      shotMag[i] = 0; // Off end; disable step wave
+    explosionStepX[i]++; // Update position of step wave
+    if(explosionStepX[i] >= (80 + (NUM_LEDS_HALF << 2)))
+      explosionMag[i] = 0; // Off end; disable step wave
     else
-      shotMag[i] = ((long)shotMag[i] * 127L) >> 7; // Fade
+      explosionMag[i] = ((long)explosionMag[i] * 127L) >> 7; // Fade
   }
   // For a little visual interest, some 'sparkle' is added.
   // The cumulative step magnitude is added to one pixel at random.
-  /*long sum = 0;
-  for(i=0; i<MAXSTEPS; i++) sum += stepMag[i];
+  long sum = 0;
+  for(i=0; i<MAXSTEPS; i++) sum += explosionMag[i];
   if(sum > 0) {
     i = random(NUM_LEDS_HALF);
     mag[i] += sum / 4;
-  }*/
+  }
  
   // Now the grayscale magnitude buffer is remapped to color for the LEDs.
   // The code below uses a blackbody palette, which fades from white to yellow
@@ -281,7 +281,7 @@ void explode() {
   // projects is purposefully skipped in favor of a more plain effect.
   uint8_t r, g, b;
   int     level;
-  for(i=0; i<=NUM_LEDS_HALF; i++) { // For each LED on one side...
+  for(i=0; i<=NUM_LEDS; i++) { // For each LED on one side...
     level = mag[i];                // Pixel magnitude (brightness)
     //Serial.println(level);
     if(level < 255) {              // 0-254 = black to red-1
@@ -305,7 +305,6 @@ void explode() {
     leds[i].r = r;
     leds[i].g = g;
     leds[i].b = b;
-    FastSPI_LED.show();               // turn them back on
   }
 }
 
