@@ -11,7 +11,7 @@
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
 void setup() {
-  Serial.begin(115200); // Open serial monitor at 115200 baud to see ping results.
+  Serial.begin(9600);
 }
 
 void loop() {
