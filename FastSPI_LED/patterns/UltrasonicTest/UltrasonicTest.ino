@@ -3,6 +3,7 @@
 
 // How many leds in your strip?
 #define NUM_LEDS               44
+#define LED_DATA_PIN           11
 
 struct CRGB { unsigned char g; unsigned char r; unsigned char b; };
 
@@ -15,7 +16,7 @@ unsigned long previousUpdate = 0;
 
 #define TRIGGER_PIN  A0  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     A1  // Arduino pin tied to echo pin on the ultrasonic sensor.
-#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+#define MAX_DISTANCE 50 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
@@ -24,6 +25,7 @@ void setup() {
   
   FastSPI_LED.setLeds(NUM_LEDS);
   FastSPI_LED.setChipset(CFastSPI_LED::SPI_LPD6803);
+  FastSPI_LED.setPin(LED_DATA_PIN);
 
   FastSPI_LED.init();
   FastSPI_LED.start();
@@ -52,9 +54,15 @@ void loop() {
   
   if (now - previousUpdate >= colorUpdateInterval) {
     sonarReading = sonar.ping();
-    cmDist = (byte) (sonarReading / US_ROUNDTRIP_CM);
     
-    setColor(cmDist << 4, &currentColor);
+    if (sonarReading == NO_ECHO) {
+      currentColor.r = 255;
+      currentColor.g = 255;
+      currentColor.b = 255;
+    } else {
+      cmDist = (byte) (sonarReading / US_ROUNDTRIP_CM);
+      setColor(cmDist << 4, &currentColor);
+    }
     
     for (i = 0; i < NUM_LEDS; i++) {
       leds[i].r = currentColor.r;
